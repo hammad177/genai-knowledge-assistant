@@ -5,7 +5,7 @@ from typing import TypedDict, Literal
 
 class AgentState(TypedDict, total=False):
     query: str
-    route: Literal["rag", "web_search", "memory", "general"]
+    route: Literal["rag", "web_search", "memory", "graph", "general"]
     answer: str
     confidence: str
     reasoning: str

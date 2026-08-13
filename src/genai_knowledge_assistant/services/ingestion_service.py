@@ -10,6 +10,7 @@ from genai_knowledge_assistant.repositories.vector_repository import VectorRepos
 from genai_knowledge_assistant.repositories.document_repository import (
     DocumentRepository,
 )
+from genai_knowledge_assistant.services.graph_service import GraphService
 from genai_knowledge_assistant.models.document import DocumentMetadata, IngestResponse
 from genai_knowledge_assistant.config import settings
 
@@ -21,11 +22,13 @@ class IngestionService:
         document_repo: DocumentRepository,
         pdf_extractor: PDFExtractor,
         url_extractor: URLExtractor,
+        graph_service: GraphService,
     ):
         self.vector_repo = vector_repo
         self.document_repo = document_repo
         self.pdf_extractor = pdf_extractor
         self.url_extractor = url_extractor
+        self.graph_service = graph_service
         self.chunker = get_chunker(
             "recursive", settings.CHUNK_SIZE, settings.CHUNK_OVERLAP
         )
@@ -48,15 +51,19 @@ class IngestionService:
                 chunk_count=existing.chunk_count,
             )
 
-        # Same source, different content -> replace the old version
         for doc in self.document_repo.list_all():
             if doc.source == source and doc.content_hash != content_hash:
                 self.vector_repo.delete_by_document_id(doc.id)
                 self.document_repo.delete(doc.id)
+                self.graph_service.graph_repo.delete_by_source(source)
 
         chunks = self.chunker.chunk(text)
         document_id = str(uuid.uuid4())
         self.vector_repo.add_chunks(chunks, source=source, document_id=document_id)
+
+        # Extract entities/relationships from the full text (not per-chunk,
+        # to preserve cross-chunk context for relationship detection)
+        self.graph_service.extract_and_store(text, source=source)
 
         metadata = DocumentMetadata(
             id=document_id,

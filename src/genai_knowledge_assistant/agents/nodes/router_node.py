@@ -1,4 +1,4 @@
-"""Classifies the incoming query into one of four handling paths."""
+"""Classifies the incoming query into one of five handling paths."""
 
 from typing import Literal
 from pydantic import BaseModel, Field
@@ -10,7 +10,7 @@ from genai_knowledge_assistant.agents.state import AgentState
 
 
 class RouteDecision(BaseModel):
-    route: Literal["rag", "web_search", "memory", "general"] = Field(
+    route: Literal["rag", "web_search", "memory", "graph", "general"] = Field(
         ..., description="Which path best answers the query."
     )
     reasoning: str = Field(
@@ -20,14 +20,13 @@ class RouteDecision(BaseModel):
 
 ROUTER_SYSTEM_PROMPT = (
     "You are a routing agent. Given a user's question, decide which path should handle it:\n"
-    "- 'rag': the question is likely answerable from the user's own ingested documents "
-    "(specific facts, details, or content someone would upload as a PDF or reference page).\n"
-    "- 'web_search': the question needs current, real-time, or recent information "
-    "(news, prices, live events, anything time-sensitive).\n"
-    "- 'memory': the question refers to something the user told the assistant previously "
-    "in past conversations (preferences, prior context, 'what did I tell you about...').\n"
-    "- 'general': the question is general knowledge, unrelated to documents, the web, or memory "
-    "(definitions, common facts, casual conversation).\n"
+    "- 'rag': the question asks for specific facts or details likely found directly in the "
+    "user's ingested documents.\n"
+    "- 'graph': the question asks how two or more entities relate to each other, or requires "
+    "connecting multiple facts together (e.g. 'how does X relate to Y', 'who works with Z').\n"
+    "- 'web_search': the question needs current, real-time, or recent information.\n"
+    "- 'memory': the question refers to something the user told the assistant previously.\n"
+    "- 'general': general knowledge, unrelated to documents, the graph, the web, or memory.\n"
     "Pick exactly one route."
 )
 

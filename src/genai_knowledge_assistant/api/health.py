@@ -14,8 +14,8 @@ def health_check():
     # Check Neo4j connectivity
     try:
         driver = GraphDatabase.driver(
-            settings.neo4j_uri,
-            auth=(settings.neo4j_user, settings.neo4j_password),
+            settings.NEO4J_URI,
+            auth=(settings.NEO4J_USERNAME, settings.NEO4J_PASSWORD),
         )
         driver.verify_connectivity()
         driver.close()

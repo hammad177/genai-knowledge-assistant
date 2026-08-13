@@ -8,11 +8,13 @@ from genai_knowledge_assistant.repositories.vector_repository import VectorRepos
 from genai_knowledge_assistant.repositories.document_repository import (
     DocumentRepository,
 )
+from genai_knowledge_assistant.repositories.graph_repository import GraphRepository
 
 from genai_knowledge_assistant.services.ingestion_service import IngestionService
 from genai_knowledge_assistant.services.chat_service import ChatService
 from genai_knowledge_assistant.services.agent_service import AgentService
 from genai_knowledge_assistant.services.memory_service import MemoryService
+from genai_knowledge_assistant.services.graph_service import GraphService
 
 from genai_knowledge_assistant.config import settings
 
@@ -34,6 +36,7 @@ def get_ingestion_service() -> IngestionService:
         document_repo=get_document_repository(),
         pdf_extractor=PDFExtractor(),
         url_extractor=URLExtractor(),
+        graph_service=get_graph_service(),
     )
 
 
@@ -57,4 +60,23 @@ def get_agent_service() -> AgentService:
     return AgentService(
         vector_repo=get_vector_repository(),
         memory_service=get_memory_service(),
+    )
+
+
+@lru_cache
+def get_graph_repository() -> GraphRepository:
+    return GraphRepository()
+
+
+@lru_cache
+def get_graph_service() -> GraphService:
+    return GraphService(graph_repo=get_graph_repository())
+
+
+@lru_cache
+def get_agent_service() -> AgentService:
+    return AgentService(
+        vector_repo=get_vector_repository(),
+        memory_service=get_memory_service(),
+        graph_service=get_graph_service(),
     )
