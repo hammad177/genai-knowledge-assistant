@@ -31,5 +31,8 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "data/uploads"
     DOCUMENT_METADATA_PATH: str = "data/documents.json"
 
+    # --- Retrieval ---
+    TOP_K: int = 4
+
 
 settings = Settings()

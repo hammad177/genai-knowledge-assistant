@@ -8,6 +8,7 @@ from genai_knowledge_assistant.repositories.document_repository import (
     DocumentRepository,
 )
 from genai_knowledge_assistant.services.ingestion_service import IngestionService
+from genai_knowledge_assistant.services.chat_service import ChatService
 from genai_knowledge_assistant.config import settings
 
 
@@ -29,3 +30,8 @@ def get_ingestion_service() -> IngestionService:
         pdf_extractor=PDFExtractor(),
         url_extractor=URLExtractor(),
     )
+
+
+@lru_cache
+def get_chat_service() -> ChatService:
+    return ChatService(vector_repo=get_vector_repository())
