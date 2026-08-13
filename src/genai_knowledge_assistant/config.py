@@ -8,6 +8,8 @@ class Settings(BaseSettings):
 
     # --- OpenAI ---
     OPENAI_API_KEY: str
+    EMBEDDING_MODEL: str = "text-embedding-3-small"
+    CHAT_MODEL: str = "gpt-4o-mini"
 
     # --- Neo4j ---
     NEO4J_URI: str = "bolt://localhost:7687"
@@ -20,6 +22,14 @@ class Settings(BaseSettings):
 
     # --- Mem0 ---
     MEM0_API_KEY: str | None = None
+
+    # --- Chunking ---
+    CHUNK_SIZE: int = 1000
+    CHUNK_OVERLAP: int = 250
+
+    # --- Storage paths ---
+    UPLOAD_DIR: str = "data/uploads"
+    DOCUMENT_METADATA_PATH: str = "data/documents.json"
 
 
 settings = Settings()

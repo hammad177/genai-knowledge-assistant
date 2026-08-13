@@ -1,0 +1,81 @@
+"""Orchestrates extraction, chunking, embedding, and storage for new documents."""
+
+import hashlib
+import uuid
+from pathlib import Path
+
+from genai_knowledge_assistant.core.extraction import PDFExtractor, URLExtractor
+from genai_knowledge_assistant.core.chunking import get_chunker
+from genai_knowledge_assistant.repositories.vector_repository import VectorRepository
+from genai_knowledge_assistant.repositories.document_repository import (
+    DocumentRepository,
+)
+from genai_knowledge_assistant.models.document import DocumentMetadata, IngestResponse
+from genai_knowledge_assistant.config import settings
+
+
+class IngestionService:
+    def __init__(
+        self,
+        vector_repo: VectorRepository,
+        document_repo: DocumentRepository,
+        pdf_extractor: PDFExtractor,
+        url_extractor: URLExtractor,
+    ):
+        self.vector_repo = vector_repo
+        self.document_repo = document_repo
+        self.pdf_extractor = pdf_extractor
+        self.url_extractor = url_extractor
+        self.chunker = get_chunker(
+            "recursive", settings.CHUNK_SIZE, settings.CHUNK_OVERLAP
+        )
+
+    @staticmethod
+    def _hash_text(text: str) -> str:
+        return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+    def _ingest(self, text: str, source: str, source_type: str) -> IngestResponse:
+        if not text.strip():
+            raise ValueError(f"No extractable text found in '{source}'.")
+
+        content_hash = self._hash_text(text)
+        existing = self.document_repo.find_by_hash(content_hash)
+        if existing:
+            return IngestResponse(
+                id=existing.id,
+                source=source,
+                status="skipped_duplicate",
+                chunk_count=existing.chunk_count,
+            )
+
+        # Same source, different content -> replace the old version
+        for doc in self.document_repo.list_all():
+            if doc.source == source and doc.content_hash != content_hash:
+                self.vector_repo.delete_by_document_id(doc.id)
+                self.document_repo.delete(doc.id)
+
+        chunks = self.chunker.chunk(text)
+        document_id = str(uuid.uuid4())
+        self.vector_repo.add_chunks(chunks, source=source, document_id=document_id)
+
+        metadata = DocumentMetadata(
+            id=document_id,
+            filename=source,
+            source_type=source_type,
+            source=source,
+            content_hash=content_hash,
+            chunk_count=len(chunks),
+        )
+        self.document_repo.save(metadata)
+
+        return IngestResponse(
+            id=document_id, source=source, status="ingested", chunk_count=len(chunks)
+        )
+
+    def ingest_pdf(self, file_path: Path, original_filename: str) -> IngestResponse:
+        text = self.pdf_extractor.extract(file_path)
+        return self._ingest(text, source=original_filename, source_type="pdf")
+
+    def ingest_url(self, url: str) -> IngestResponse:
+        text = self.url_extractor.extract(url)
+        return self._ingest(text, source=url, source_type="url")
