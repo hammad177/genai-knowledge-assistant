@@ -22,6 +22,7 @@ class Settings(BaseSettings):
 
     # --- Mem0 ---
     MEM0_API_KEY: str | None = None
+    MEM0_USER_ID: str = "default_user"
 
     # --- Chunking ---
     CHUNK_SIZE: int = 1000

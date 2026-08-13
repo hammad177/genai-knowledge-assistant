@@ -1,13 +1,14 @@
 """FastAPI app entrypoint."""
 
 from fastapi import FastAPI
-from genai_knowledge_assistant.api import health, documents, chat
+from genai_knowledge_assistant.api import health, documents, chat, memory
 
 app = FastAPI(title="GenAI Knowledge Assistant")
 
 app.include_router(health.router)
 app.include_router(documents.router)
 app.include_router(chat.router)
+app.include_router(memory.router)
 
 
 def main():

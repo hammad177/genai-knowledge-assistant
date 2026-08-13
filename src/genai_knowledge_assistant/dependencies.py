@@ -12,6 +12,7 @@ from genai_knowledge_assistant.repositories.document_repository import (
 from genai_knowledge_assistant.services.ingestion_service import IngestionService
 from genai_knowledge_assistant.services.chat_service import ChatService
 from genai_knowledge_assistant.services.agent_service import AgentService
+from genai_knowledge_assistant.services.memory_service import MemoryService
 
 from genai_knowledge_assistant.config import settings
 
@@ -44,3 +45,16 @@ def get_chat_service() -> ChatService:
 @lru_cache
 def get_agent_service() -> AgentService:
     return AgentService(vector_repo=get_vector_repository())
+
+
+@lru_cache
+def get_memory_service() -> MemoryService:
+    return MemoryService()
+
+
+@lru_cache
+def get_agent_service() -> AgentService:
+    return AgentService(
+        vector_repo=get_vector_repository(),
+        memory_service=get_memory_service(),
+    )
