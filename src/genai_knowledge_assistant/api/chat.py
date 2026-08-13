@@ -15,6 +15,6 @@ async def ask_question(
     chat_service: ChatService = Depends(get_chat_service),
 ):
     try:
-        return chat_service.ask(query=body.query, top_k=body.top_k)
+        return await chat_service.ask(query=body.query, top_k=body.top_k)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate answer: {e}")

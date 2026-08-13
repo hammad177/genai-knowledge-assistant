@@ -1,35 +1,22 @@
-"""RAG chat service: retrieve relevant chunks, ground a prompt, call the LLM."""
+"""RAG chat service: retrieve relevant chunks, ground a prompt, get a
+validated structured answer from the LLM via Pydantic AI."""
 
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
 
 from genai_knowledge_assistant.repositories.vector_repository import VectorRepository
-from genai_knowledge_assistant.models.chat import ChatResponse, SourceCitation
-from genai_knowledge_assistant.config import settings
-
-SYSTEM_PROMPT = (
-    "You are a helpful assistant that answers questions using only the "
-    "provided document context below. If the answer is not contained in "
-    "the context, say plainly that you don't have enough information in "
-    "the documents — do not make anything up. Keep answers clear and concise."
+from genai_knowledge_assistant.llm.structured_agent import build_structured_agent
+from genai_knowledge_assistant.models.chat import (
+    ChatResponse,
+    SourceCitation,
+    ConfidenceLevel,
 )
+from genai_knowledge_assistant.config import settings
 
 
 class ChatService:
     def __init__(self, vector_repo: VectorRepository):
         self.vector_repo = vector_repo
-        self.llm = ChatOpenAI(
-            model=settings.CHAT_MODEL,
-            api_key=settings.OPENAI_API_KEY,
-            temperature=0.2,
-        )
-        self.prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", SYSTEM_PROMPT),
-                ("human", "Context:\n{context}\n\nQuestion: {question}"),
-            ]
-        )
+        self.agent = build_structured_agent()
 
     def _build_context(self, docs: list[Document]) -> str:
         return "\n\n".join(
@@ -48,21 +35,27 @@ class ChatService:
             for doc in docs
         ]
 
-    def ask(self, query: str, top_k: int | None = None) -> ChatResponse:
+    async def ask(self, query: str, top_k: int | None = None) -> ChatResponse:
         k = top_k or settings.TOP_K
         docs = self.vector_repo.similarity_search(query, top_k=k)
 
         if not docs:
             return ChatResponse(
                 answer="I couldn't find any relevant information in the ingested documents.",
+                confidence=ConfidenceLevel.low,
+                reasoning="No matching chunks were retrieved from the vector store.",
                 sources=[],
             )
 
         context = self._build_context(docs)
-        chain = self.prompt | self.llm
-        response = chain.invoke({"context": context, "question": query})
+        user_prompt = f"Context:\n{context}\n\nQuestion: {query}"
+
+        result = await self.agent.run(user_prompt)
+        structured = result.output
 
         return ChatResponse(
-            answer=response.content.strip(),
+            answer=structured.answer,
+            confidence=structured.confidence,
+            reasoning=structured.reasoning,
             sources=self._build_citations(docs),
         )
