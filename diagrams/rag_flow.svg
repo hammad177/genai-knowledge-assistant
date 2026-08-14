@@ -1,0 +1,32 @@
+<svg width="680" height="510" viewBox="0 0 680 510" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="#374151" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+<rect width="680" height="510" fill="#ffffff"/>
+
+<rect x="190" y="30" width="300" height="56" rx="8" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1"/>
+<text x="340" y="52" text-anchor="middle" font-size="15" font-weight="600" fill="#111827">User query</text>
+<text x="340" y="70" text-anchor="middle" font-size="12" fill="#4b5563">Routed to rag node</text>
+<line x1="340" y1="86" x2="340" y2="122" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="190" y="126" width="300" height="56" rx="8" fill="#ccfbf1" stroke="#14b8a6" stroke-width="1"/>
+<text x="340" y="148" text-anchor="middle" font-size="15" font-weight="600" fill="#0f172a">Similarity search</text>
+<text x="340" y="166" text-anchor="middle" font-size="12" fill="#134e4a">Top-k chunks from Chroma</text>
+<line x1="340" y1="182" x2="340" y2="218" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="190" y="222" width="300" height="56" rx="8" fill="#ccfbf1" stroke="#14b8a6" stroke-width="1"/>
+<text x="340" y="244" text-anchor="middle" font-size="15" font-weight="600" fill="#0f172a">Build grounded prompt</text>
+<text x="340" y="262" text-anchor="middle" font-size="12" fill="#134e4a">Chunks + system prompt</text>
+<line x1="340" y1="278" x2="340" y2="314" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="190" y="318" width="300" height="56" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+<text x="340" y="340" text-anchor="middle" font-size="15" font-weight="600" fill="#78350f">Pydantic AI agent</text>
+<text x="340" y="358" text-anchor="middle" font-size="12" fill="#92400e">Validates output, retries on failure</text>
+<line x1="340" y1="374" x2="340" y2="410" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="190" y="414" width="300" height="56" rx="8" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1"/>
+<text x="340" y="436" text-anchor="middle" font-size="15" font-weight="600" fill="#111827">Structured answer</text>
+<text x="340" y="454" text-anchor="middle" font-size="12" fill="#4b5563">Confidence, reasoning, sources</text>
+</svg>

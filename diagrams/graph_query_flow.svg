@@ -1,0 +1,32 @@
+<svg width="680" height="510" viewBox="0 0 680 510" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="#374151" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+<rect width="680" height="510" fill="#ffffff"/>
+
+<rect x="190" y="30" width="300" height="56" rx="8" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1"/>
+<text x="340" y="52" text-anchor="middle" font-size="15" font-weight="600" fill="#111827">User query</text>
+<text x="340" y="70" text-anchor="middle" font-size="12" fill="#4b5563">Routed to graph node</text>
+<line x1="340" y1="86" x2="340" y2="122" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="190" y="126" width="300" height="56" rx="8" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1"/>
+<text x="340" y="148" text-anchor="middle" font-size="15" font-weight="600" fill="#1e1b4b">Identify entities</text>
+<text x="340" y="166" text-anchor="middle" font-size="12" fill="#4c1d95">LLM extracts entity names</text>
+<line x1="340" y1="182" x2="340" y2="218" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="190" y="222" width="300" height="56" rx="8" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1"/>
+<text x="340" y="244" text-anchor="middle" font-size="15" font-weight="600" fill="#1e1b4b">Neo4j traversal</text>
+<text x="340" y="262" text-anchor="middle" font-size="12" fill="#4c1d95">Up to 2 hops of relationships</text>
+<line x1="340" y1="278" x2="340" y2="314" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="190" y="318" width="300" height="56" rx="8" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1"/>
+<text x="340" y="340" text-anchor="middle" font-size="15" font-weight="600" fill="#1e1b4b">LLM synthesizes</text>
+<text x="340" y="358" text-anchor="middle" font-size="12" fill="#4c1d95">Facts turned into natural language</text>
+<line x1="340" y1="374" x2="340" y2="410" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="190" y="414" width="300" height="56" rx="8" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1"/>
+<text x="340" y="436" text-anchor="middle" font-size="15" font-weight="600" fill="#111827">Answer</text>
+<text x="340" y="454" text-anchor="middle" font-size="12" fill="#4b5563">Source: graph relationships</text>
+</svg>
