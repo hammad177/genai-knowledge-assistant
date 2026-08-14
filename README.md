@@ -51,15 +51,19 @@ Each route has its own shape:
 <summary>Per-path detail diagrams</summary>
 
 **RAG**
+
 ![RAG flow](diagrams/rag_flow.svg)
 
 **Web search**
+
 ![Web search flow](diagrams/web_search_flow.svg)
 
 **Memory**
+
 ![Memory flow](diagrams/memory_flow.svg)
 
 **Graph**
+
 ![Graph query flow](diagrams/graph_query_flow.svg)
 
 </details>
