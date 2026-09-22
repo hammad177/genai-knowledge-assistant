@@ -7,11 +7,16 @@ from pathlib import Path
 
 from genai_knowledge_assistant.guardrails.injection_guard import InjectionGuard
 from genai_knowledge_assistant.guardrails.pii_detector import scan_for_pii
+from genai_knowledge_assistant.guardrails.scope_guard import ScopeGuard
+from genai_knowledge_assistant.guardrails.output_guard import OutputGuard
+
 from genai_knowledge_assistant.guardrails.adversarial_test_set import (
     ADVERSARIAL_INJECTION_CASES,
     ADVERSARIAL_PII_CASES,
     ADVERSARIAL_INJECTION_CASES_HARD,
     ADVERSARIAL_PII_CASES_HARD,
+    ADVERSARIAL_SCOPE_CASES,
+    ADVERSARIAL_OUTPUT_CASES,
 )
 
 RESULTS_DIR = Path("data/eval_runs")
@@ -116,4 +121,89 @@ def _print_pii_summary(summary: dict) -> None:
         mark = "PASS" if r["correct"] else "FAIL"
         print(
             f"  [{mark}] {r['id']:<6} expected={r['expected_pii']!s:<6} actual={r['actual_pii']!s:<6} {r['text']}"
+        )
+
+
+async def run_scope_guard_eval() -> dict:
+    guard = ScopeGuard()
+    results = []
+    correct = 0
+
+    for case in ADVERSARIAL_SCOPE_CASES:
+        check = await guard.check(case["text"])
+        is_correct = check.is_blocked == case["expected_blocked"]
+        correct += int(is_correct)
+        results.append(
+            {
+                "id": case["id"],
+                "text": case["text"][:80],
+                "expected_blocked": case["expected_blocked"],
+                "actual_blocked": check.is_blocked,
+                "verdict": check.verdict,
+                "reasoning": check.reasoning,
+                "note": case.get("note"),
+                "correct": is_correct,
+            }
+        )
+
+    accuracy = correct / len(ADVERSARIAL_SCOPE_CASES)
+    summary = {
+        "timestamp": datetime.now(UTC).isoformat(),
+        "check": "scope",
+        "total": len(ADVERSARIAL_SCOPE_CASES),
+        "correct": correct,
+        "accuracy": round(accuracy, 3),
+        "results": results,
+    }
+    _save(summary, "scope_guard_eval")
+    _print_generic_summary(summary, "expected_blocked", "actual_blocked")
+    return summary
+
+
+async def run_output_guard_eval() -> dict:
+    guard = OutputGuard()
+    results = []
+    correct = 0
+
+    for case in ADVERSARIAL_OUTPUT_CASES:
+        check = await guard.check(case["text"])
+        is_correct = check.is_blocked == case["expected_blocked"]
+        correct += int(is_correct)
+        results.append(
+            {
+                "id": case["id"],
+                "text": case["text"][:80],
+                "expected_blocked": case["expected_blocked"],
+                "actual_blocked": check.is_blocked,
+                "verdict": check.verdict,
+                "reasoning": check.reasoning,
+                "note": case.get("note"),
+                "correct": is_correct,
+            }
+        )
+
+    accuracy = correct / len(ADVERSARIAL_OUTPUT_CASES)
+    summary = {
+        "timestamp": datetime.now(UTC).isoformat(),
+        "check": "output_safety",
+        "total": len(ADVERSARIAL_OUTPUT_CASES),
+        "correct": correct,
+        "accuracy": round(accuracy, 3),
+        "results": results,
+    }
+    _save(summary, "output_guard_eval")
+    _print_generic_summary(summary, "expected_blocked", "actual_blocked")
+    return summary
+
+
+def _print_generic_summary(summary: dict, expected_key: str, actual_key: str) -> None:
+    pct = summary["accuracy"] * 100
+    print(
+        f"\n{summary['check']} guard eval — {pct:.1f}% ({summary['correct']}/{summary['total']})\n"
+    )
+    for r in summary["results"]:
+        mark = "PASS" if r["correct"] else "FAIL"
+        note = f"  ({r['note']})" if r.get("note") else ""
+        print(
+            f"  [{mark}] {r['id']:<8} expected={r[expected_key]!s:<6} actual={r[actual_key]!s:<6} {r['text']}{note}"
         )
