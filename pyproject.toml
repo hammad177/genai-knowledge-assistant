@@ -54,4 +54,5 @@ dev = [
 dev = "genai-knowledge-assistant"
 eval-router = "python scripts/run_router_eval.py"
 eval-faithfulness = "python scripts/run_faithfulness_eval.py"
+eval-guardrails = "python scripts/run_guardrail_eval.py"
 test = "pytest"

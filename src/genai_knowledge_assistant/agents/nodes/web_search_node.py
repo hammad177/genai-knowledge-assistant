@@ -11,6 +11,10 @@ Two things this checks that the LLM's self-report alone doesn't catch:
    different search hits giving three different current prices). A claim
    can be individually "true" (really appears in the results) while the
    overall answer is still unreliable because the sources disagree.
+
+Search results are also scanned for prompt injection before being sent
+to the LLM at all — live web content is untrusted, and a malicious page
+could contain hidden instructions aimed at the assistant, not the user.
 """
 
 from langchain_openai import ChatOpenAI
@@ -20,6 +24,7 @@ from genai_knowledge_assistant.config import settings
 from genai_knowledge_assistant.agents.state import AgentState
 from genai_knowledge_assistant.tools.web_search_tool import run_web_search
 from genai_knowledge_assistant.models.web_search import WebSearchAnswer, ClaimEvidence
+from genai_knowledge_assistant.guardrails.injection_guard import InjectionGuard
 
 SYSTEM_PROMPT = (
     "You answer questions using ONLY the provided web search results. Rules:\n"
@@ -89,6 +94,7 @@ def make_web_search_node():
         ]
     )
     chain = prompt | structured_llm
+    injection_guard = InjectionGuard()
 
     async def web_search_node(state: AgentState) -> AgentState:
         query = state["query"]
@@ -105,18 +111,19 @@ def make_web_search_node():
                 "sources": [],
             }
 
+        injection_check = await injection_guard.scan(results)
+        if injection_check.is_injection:
+            return {
+                **state,
+                "answer": "Web search results were flagged as potentially containing manipulated content and were not used.",
+                "confidence": "low",
+                "reasoning": f"Injection guard blocked search results: {injection_check.reasoning}",
+                "sources": [],
+            }
+
         parsed = await chain.ainvoke({"results": results, "query": query})
 
-        # Debug visibility — remove once confirmed working correctly in your env.
-        print(
-            f"[web_search_node] raw claims from LLM: {[c.claim for c in parsed.claims]}"
-        )
-
         verified_claims, any_dropped = _verify_claims(parsed.claims, results)
-        print(
-            f"[web_search_node] verified claims after quote check: {[c.claim for c in verified_claims]}"
-        )
-
         answer_text, contradiction = _build_answer(verified_claims)
 
         confidence = parsed.confidence

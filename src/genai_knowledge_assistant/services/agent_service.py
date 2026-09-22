@@ -9,6 +9,7 @@ from genai_knowledge_assistant.models.chat import (
     SourceCitation,
     ConfidenceLevel,
 )
+from genai_knowledge_assistant.guardrails.injection_guard import InjectionGuard
 
 
 class AgentService:
@@ -20,8 +21,18 @@ class AgentService:
     ):
         self.memory_service = memory_service
         self.graph = build_agent_graph(vector_repo, memory_service, graph_service)
+        self.injection_guard = InjectionGuard()
 
     async def ask(self, query: str) -> ChatResponse:
+        check = await self.injection_guard.scan(query)
+        if check.is_injection:
+            return ChatResponse(
+                answer="This request was flagged as a potential attempt to manipulate the system and was not processed.",
+                confidence=ConfidenceLevel.low,
+                reasoning=check.reasoning,
+                sources=[],
+            )
+
         result = await self.graph.ainvoke({"query": query})
         sources = [SourceCitation(**s) for s in result.get("sources", [])]
 

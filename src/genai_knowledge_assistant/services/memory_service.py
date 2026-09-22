@@ -4,6 +4,7 @@ from mem0 import Memory
 
 from genai_knowledge_assistant.config import settings
 from genai_knowledge_assistant.models.memory import MemoryEntry
+from genai_knowledge_assistant.guardrails.pii_detector import scan_for_pii
 
 
 class MemoryService:
@@ -29,9 +30,11 @@ class MemoryService:
         self.user_id = settings.MEM0_USER_ID
 
     def add_from_conversation(self, query: str, answer: str) -> None:
+        safe_query = scan_for_pii(query).redacted_text
+        safe_answer = scan_for_pii(answer).redacted_text
         messages = [
-            {"role": "user", "content": query},
-            {"role": "assistant", "content": answer},
+            {"role": "user", "content": safe_query},
+            {"role": "assistant", "content": safe_answer},
         ]
         self.memory.add(messages, user_id=self.user_id)
 
