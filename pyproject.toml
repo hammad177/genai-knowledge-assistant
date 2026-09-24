@@ -50,10 +50,16 @@ dev = [
     "pytest-mock>=3.15.1",
 ]
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
 [tool.poe.tasks]
 dev = "genai-knowledge-assistant"
 eval-router = "python scripts/run_router_eval.py"
 eval-faithfulness = "python scripts/run_faithfulness_eval.py"
 eval-guardrails = "python scripts/run_guardrail_eval.py"
 observability-summary= "python scripts/run_observability_summary.py"
-test = "pytest"
+test = "pytest -v"
+
+
