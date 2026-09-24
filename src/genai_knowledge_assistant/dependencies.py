@@ -30,6 +30,21 @@ def get_document_repository() -> DocumentRepository:
 
 
 @lru_cache
+def get_graph_repository() -> GraphRepository:
+    return GraphRepository()
+
+
+@lru_cache
+def get_graph_service() -> GraphService:
+    return GraphService(graph_repo=get_graph_repository())
+
+
+@lru_cache
+def get_memory_service() -> MemoryService:
+    return MemoryService()
+
+
+@lru_cache
 def get_ingestion_service() -> IngestionService:
     return IngestionService(
         vector_repo=get_vector_repository(),
@@ -43,34 +58,6 @@ def get_ingestion_service() -> IngestionService:
 @lru_cache
 def get_chat_service() -> ChatService:
     return ChatService(vector_repo=get_vector_repository())
-
-
-@lru_cache
-def get_agent_service() -> AgentService:
-    return AgentService(vector_repo=get_vector_repository())
-
-
-@lru_cache
-def get_memory_service() -> MemoryService:
-    return MemoryService()
-
-
-@lru_cache
-def get_agent_service() -> AgentService:
-    return AgentService(
-        vector_repo=get_vector_repository(),
-        memory_service=get_memory_service(),
-    )
-
-
-@lru_cache
-def get_graph_repository() -> GraphRepository:
-    return GraphRepository()
-
-
-@lru_cache
-def get_graph_service() -> GraphService:
-    return GraphService(graph_repo=get_graph_repository())
 
 
 @lru_cache

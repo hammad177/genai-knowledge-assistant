@@ -36,5 +36,11 @@ class Settings(BaseSettings):
     NEO4J_PASSWORD: str
     NEO4J_DATABASE: str = "neo4j"
 
+    # --- Observability ---
+    LANGSMITH_TRACING: bool = True
+    LANGSMITH_ENDPOINT: str = "https://api.smith.langchain.com"
+    LANGSMITH_API_KEY: str | None = None
+    LANGSMITH_PROJECT: str = "genai-knowledge-assistant"
+
 
 settings = Settings()

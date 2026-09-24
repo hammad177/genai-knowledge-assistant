@@ -13,6 +13,8 @@ from genai_knowledge_assistant.repositories.document_repository import (
 from genai_knowledge_assistant.services.graph_service import GraphService
 from genai_knowledge_assistant.models.document import DocumentMetadata, IngestResponse
 from genai_knowledge_assistant.config import settings
+from genai_knowledge_assistant.guardrails.injection_guard import InjectionGuard
+from genai_knowledge_assistant.guardrails.pii_detector import scan_for_pii
 
 
 class IngestionService:
@@ -32,14 +34,26 @@ class IngestionService:
         self.chunker = get_chunker(
             "recursive", settings.CHUNK_SIZE, settings.CHUNK_OVERLAP
         )
+        self.injection_guard = InjectionGuard()
 
     @staticmethod
     def _hash_text(text: str) -> str:
         return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
-    def _ingest(self, text: str, source: str, source_type: str) -> IngestResponse:
+    async def _ingest(self, text: str, source: str, source_type: str) -> IngestResponse:
         if not text.strip():
             raise ValueError(f"No extractable text found in '{source}'.")
+
+        injection_check = await self.injection_guard.scan(text)
+        if injection_check.is_injection:
+            raise ValueError(
+                f"Ingestion blocked — content flagged as a potential prompt "
+                f"injection: {injection_check.reasoning}"
+            )
+
+        pii_scan = scan_for_pii(text)
+        if pii_scan.has_pii:
+            text = pii_scan.redacted_text
 
         content_hash = self._hash_text(text)
         existing = self.document_repo.find_by_hash(content_hash)
@@ -79,10 +93,12 @@ class IngestionService:
             id=document_id, source=source, status="ingested", chunk_count=len(chunks)
         )
 
-    def ingest_pdf(self, file_path: Path, original_filename: str) -> IngestResponse:
+    async def ingest_pdf(
+        self, file_path: Path, original_filename: str
+    ) -> IngestResponse:
         text = self.pdf_extractor.extract(file_path)
-        return self._ingest(text, source=original_filename, source_type="pdf")
+        return await self._ingest(text, source=original_filename, source_type="pdf")
 
-    def ingest_url(self, url: str) -> IngestResponse:
+    async def ingest_url(self, url: str) -> IngestResponse:
         text = self.url_extractor.extract(url)
-        return self._ingest(text, source=url, source_type="url")
+        return await self._ingest(text, source=url, source_type="url")
