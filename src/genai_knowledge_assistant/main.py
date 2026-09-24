@@ -1,10 +1,18 @@
 """FastAPI app entrypoint."""
 
 from fastapi import FastAPI
+from genai_knowledge_assistant.observability.tracing_setup import setup_tracing
 from genai_knowledge_assistant.api import health, documents, chat, memory, graph
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI(title="GenAI Knowledge Assistant")
 
+# LangSmith tracing
+setup_tracing()
+
+# Routers
 app.include_router(health.router)
 app.include_router(documents.router)
 app.include_router(chat.router)
